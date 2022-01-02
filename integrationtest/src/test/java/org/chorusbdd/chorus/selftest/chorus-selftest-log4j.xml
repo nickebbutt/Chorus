@@ -8,31 +8,21 @@ ${feature.dir} - the directory under which the currently executing .feature file
 ${feature.process.name} - a unique name generated for each process started
 -->
 
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-
-<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
-
-    <appender name="console" class="org.apache.log4j.ConsoleAppender">
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d{HH:mm:ss.SSS} %-5.5p [%-20.20t] %c{1}:%L - %m%n"/>
-        </layout>
-    </appender>
-
-    <category name="com.ib">
-        <priority value="DEBUG"/>
-    </category>
-
-    <category name="org.chorusbdd.chorus">
-        <priority value="DEBUG"/>
-    </category>
-
-    <category name="org.springframework">
-        <priority value="WARN"/>
-    </category>
-
-    <root>
-        <priority value="INFO"/>
-        <appender-ref ref="console"/>
-    </root>
-
-</log4j:configuration>
+<Configuration>
+<Appenders>
+    <Console name="console" target="SYSTEM_OUT">
+        <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5.5p [%-20.20t] %c{1}:%L - %m%n"/>
+    </Console>
+</Appenders>
+<Loggers>
+    <Logger name="org.chorusbdd.chorus" level="DEBUG">
+        <AppenderRef ref="console"/>
+    </Logger>
+    <Logger name="org.springframework" level="WARN">
+        <AppenderRef ref="console"/>
+    </Logger>
+    <Root level="INFO">
+        <AppenderRef ref="console"/>
+    </Root>
+</Loggers>
+</Configuration>
