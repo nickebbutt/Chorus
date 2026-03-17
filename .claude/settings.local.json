@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs sed:*)",
+      "Bash(./gradlew licenseFormat)",
+      "Bash(./gradlew licenseCheck)",
+      "Bash(./gradlew tasks:*)",
+      "Bash(./gradlew license:*)"
+    ]
+  }
+}
