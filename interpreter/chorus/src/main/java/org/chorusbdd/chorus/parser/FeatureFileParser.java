@@ -82,6 +82,11 @@ public class FeatureFileParser extends AbstractChorusParser<FeatureToken> {
      * @param r
      */
     public List<FeatureToken> parse(Supplier<Reader> r) throws IOException, ParseException {
+        return new AntlrFeatureFileParser(globalStepMacro).parse(r);
+    }
+
+    @SuppressWarnings("unused") // retained for reference — FSM logic replaced by AntlrFeatureFileParser
+    private List<FeatureToken> parseLegacy(Supplier<Reader> r) throws IOException, ParseException {
 
         //first pre-parse the step macros
         List<StepMacro> featureLocalStepMacro = stepMacroParser.parse(r);

@@ -1,9 +1,66 @@
 
 apply plugin: 'signing'
+apply plugin: 'antlr'
 
 description = "chorus"
 
+// Root of the generated source tree — ANTLR appends the package path under this directory.
+def antlrOutputDir = file("${buildDir}/generated-src/antlr/main")
+// Where the .tokens and .interp files actually land (under the package subdirectory)
+def antlrPackageDir = file("${buildDir}/generated-src/antlr/main/org/chorusbdd/chorus/parser")
+def grammarSrcDir = file("src/main/antlr/org/chorusbdd/chorus/parser")
+
+// Disable the default generateGrammarSource task — we replace it with two ordered tasks
+// so the lexer grammar is always processed before the parser grammar.
+generateGrammarSource.enabled = false
+
+// Step 1: generate lexer (produces ChorusFeatureLexer.tokens needed by parser)
+task generateLexerSource(type: JavaExec) {
+    group = 'antlr'
+    description = 'Generate ANTLR4 lexer sources'
+    inputs.file "${grammarSrcDir}/ChorusFeatureLexer.g4"
+    outputs.dir antlrPackageDir
+    classpath = configurations.antlr
+    mainClass = 'org.antlr.v4.Tool'
+    args = [
+        '-o', antlrOutputDir.absolutePath,
+        '-package', 'org.chorusbdd.chorus.parser',
+        '-no-listener',
+        "${grammarSrcDir}/ChorusFeatureLexer.g4"
+    ]
+    doFirst {
+        antlrOutputDir.mkdirs()
+    }
+}
+
+// Step 2: generate parser (uses -lib to find the lexer's .tokens file)
+task generateParserSource(type: JavaExec) {
+    group = 'antlr'
+    description = 'Generate ANTLR4 parser and visitor sources'
+    inputs.file "${grammarSrcDir}/ChorusFeature.g4"
+    inputs.dir antlrPackageDir
+    outputs.dir antlrPackageDir
+    classpath = configurations.antlr
+    mainClass = 'org.antlr.v4.Tool'
+    args = [
+        '-o', antlrOutputDir.absolutePath,
+        '-package', 'org.chorusbdd.chorus.parser',
+        '-visitor',
+        '-no-listener',
+        '-lib', antlrPackageDir.absolutePath,
+        "${grammarSrcDir}/ChorusFeature.g4"
+    ]
+    dependsOn generateLexerSource
+}
+
+compileJava.dependsOn generateParserSource
+
 sourceSets {
+    main {
+        java {
+            srcDirs += ["${buildDir}/generated-src/antlr/main"]
+        }
+    }
     test {
         resources {
             srcDirs = ['src/test/resources', 'src/test/java']
@@ -12,6 +69,9 @@ sourceSets {
 }
 
 dependencies {
+    antlr group: 'org.antlr', name: 'antlr4', version: '4.13.2'
+    implementation group: 'org.antlr', name: 'antlr4-runtime', version: '4.13.2'
+
     compileOnly group: 'org.apache.ant', name: 'ant', version: '1.10.11'
     compileOnly group: 'junit', name: 'junit', version: '4.13.2'
     compileOnly group: 'commons-logging', name: 'commons-logging', version: '1.2'
