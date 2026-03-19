@@ -182,6 +182,13 @@ class FeatureFileVisitor extends ChorusFeatureBaseVisitor<Void> {
         currentFeature.setName(featureName);
         currentFeature.setUsesHandlers(usingDeclarations.toArray(new String[0]));
 
+        // Visit description lines that appear directly in the (descriptionLine | NEWLINE)*
+        // section of the feature rule (before featureBody items).
+        for (ChorusFeature.DescriptionLineContext desc : ctx.descriptionLine()) {
+            if (parseException != null) break;
+            visitDescriptionLine(desc);
+        }
+
         // Visit feature body items
         for (ChorusFeature.FeatureBodyContext body : ctx.featureBody()) {
             if (parseException != null) break;
