@@ -36,9 +36,11 @@ import org.chorusbdd.chorus.stepinvoker.catalogue.StepCatalogue;
 import org.chorusbdd.chorus.util.ChorusException;
 import org.chorusbdd.chorus.util.ExceptionHandling;
 import org.chorusbdd.chorus.util.PolledAssertion;
+import org.chorusbdd.chorus.util.assertion.ChorusAssertionError;
 
 import java.io.InterruptedIOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -262,10 +264,25 @@ public class StepProcessor {
     }
 
     private Object invokeAndGetResult(StepToken step, StepMatcher stepMatcher, StepInvoker foundStepInvoker) throws Exception {
+        List<String> args = stepMatcher.getInvokerArgs();
+
+        // If the matched step method expects a DocString as its final parameter, append the
+        // step's DocString content to the argument list so TypeCoercion can produce the value.
+        if (foundStepInvoker.requiresDocString()) {
+            String docString = step.getDocString();
+            if (docString == null) {
+                throw new ChorusAssertionError(
+                    "Step method expects a DocString argument but no DocString block (\"\"\" ... \"\"\") " +
+                    "was found in the feature file for step: " + step.getAction());
+            }
+            args = new ArrayList<>(args);
+            args.add(docString);
+        }
+
         StepRetryDecorator retryInvoker = new StepRetryDecorator(foundStepInvoker);
         ResultWithRetryCount resultWithRetryCount = retryInvoker.invoke(
             step.getTokenId(),
-            stepMatcher.getInvokerArgs()
+            args
         );
         step.setRetryAttempts(resultWithRetryCount.getRetryAttempts());
         return resultWithRetryCount.getResult();

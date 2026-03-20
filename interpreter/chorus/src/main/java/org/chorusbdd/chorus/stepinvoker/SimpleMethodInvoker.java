@@ -23,6 +23,7 @@
  */
 package org.chorusbdd.chorus.stepinvoker;
 
+import org.chorusbdd.chorus.annotations.DocString;
 import org.chorusbdd.chorus.annotations.Step;
 import org.chorusbdd.chorus.logging.ChorusLog;
 import org.chorusbdd.chorus.logging.ChorusLogFactory;
@@ -68,6 +69,17 @@ public class SimpleMethodInvoker extends SkeletalStepInvoker {
         Object result =  getMethod().invoke(getHandlerInstance(), methodArguments);
         result = handleResultIfReturnTypeVoid(getMethod(), result);
         return result;
+    }
+
+    /**
+     * @return true if the last parameter of this method is of type {@link DocString},
+     *         indicating the step requires a DocString block to be present in the feature file.
+     */
+    @Override
+    public boolean requiresDocString() {
+        Class<?>[] parameterTypes = getMethod().getParameterTypes();
+        return parameterTypes.length > 0
+                && DocString.class.equals(parameterTypes[parameterTypes.length - 1]);
     }
 
     private void checkArgumentCount(List<String> args, Class<?>[] parameterTypes) {

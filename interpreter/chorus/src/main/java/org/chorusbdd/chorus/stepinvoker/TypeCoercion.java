@@ -23,6 +23,7 @@
  */
 package org.chorusbdd.chorus.stepinvoker;
 
+import org.chorusbdd.chorus.annotations.DocString;
 import org.chorusbdd.chorus.logging.ChorusLog;
 import org.chorusbdd.chorus.logging.ChorusLogFactory;
 import org.chorusbdd.chorus.util.RegexpUtils;
@@ -56,6 +57,8 @@ public class TypeCoercion {
         try {
             if ( "null".equals(value)) {
                 result = null;
+            } else if (DocString.class.equals(requiredType)) {
+                result = (T) new DocString(value);
             } else if (isStringType(requiredType)) {
                 result = (T) value;
             } else if (isStringBufferType(requiredType)) {

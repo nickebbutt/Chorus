@@ -1,0 +1,15 @@
+Feature: DocString                                                                                   
+Chorus --> INFO    - Running feature from file: src/test/java/org/chorusbdd/chorus/selftest/docstring/docstring.feature
+  Scenario: Single line DocString is passed to the handler
+Chorus --> INFO    - Processing scenario: Single line DocString is passed to the handler
+    Given I receive the following body                                                       PASSED  
+    Then the body should equal Hello World                                                   PASSED  
+  Scenario: Multi-line DocString is passed to the handler
+Chorus --> INFO    - Processing scenario: Multi-line DocString is passed to the handler
+    Given I receive the following body                                                       PASSED  
+    Then the body should have 3 lines                                                        PASSED  
+
+
+Features  (total:1) (passed:1) (failed:0)
+Scenarios (total:2) (passed:2) (failed:0)
+Steps     (total:4) (passed:4) (failed:0) (undefined:0) (pending:0) (skipped:0)

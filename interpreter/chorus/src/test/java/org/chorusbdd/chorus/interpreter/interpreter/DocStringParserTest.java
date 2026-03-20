@@ -33,57 +33,71 @@ import org.junit.Test;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
- * Tests that Gherkin DocStrings are correctly parsed into the action field of a StepToken.
+ * Tests that Gherkin DocStrings are correctly parsed into the docString field of a StepToken.
  *
- * A DocString block (""" ... """) appearing immediately after a step line is treated as an
- * extension of that step's action text: the DocString content is appended to the step text
- * separated by a newline, so the full action can be matched by a capture-group regex on a
- * Handler @Step method just like any other step argument.
+ * A DocString block (""" ... """) appearing immediately after a step line is stored separately
+ * from the step's action text.  The action remains just the step's keyword text; the DocString
+ * content is available via {@link StepToken#getDocString()}.
+ *
+ * At execution time, if a @Step handler method declares a
+ * {@link org.chorusbdd.chorus.annotations.DocString} as its final parameter, Chorus passes the
+ * DocString content to that parameter automatically — see the integration test in the
+ * integrationtest module for an end-to-end demonstration.
  */
 public class DocStringParserTest {
 
     private static final String TEST_FEATURE_FILE = "DocStringParserTest.test";
 
     @Test
-    public void testSingleLineDocStringIsAppendedToStepAction() throws Exception {
+    public void testSingleLineDocStringIsStoredSeparatelyFromAction() throws Exception {
         FeatureToken feature = parseFeature();
 
         ScenarioToken scenario = feature.getScenarios().get(0);
         StepToken step = scenario.getSteps().get(0);
 
         assertEquals("Given", step.getType());
-        assertEquals("I receive the following body\nHello World", step.getAction());
+        // Action contains only the step text — the DocString is NOT appended to it
+        assertEquals("I receive the following body", step.getAction());
+        assertEquals("Hello World", step.getDocString());
     }
 
     @Test
-    public void testMultiLineDocStringIsAppendedToStepAction() throws Exception {
+    public void testMultiLineDocStringIsStoredCorrectly() throws Exception {
         FeatureToken feature = parseFeature();
 
         ScenarioToken scenario = feature.getScenarios().get(1);
         StepToken step = scenario.getSteps().get(0);
 
         assertEquals("Given", step.getType());
-        assertEquals("I receive the following body\nLine One\nLine Two\nLine Three", step.getAction());
+        assertEquals("I receive the following body", step.getAction());
+        assertEquals("Line One\nLine Two\nLine Three", step.getDocString());
     }
 
     @Test
     public void testDocStringPreservesBlankLines() throws Exception {
         FeatureToken feature = parseFeature();
 
-        // Third scenario: DocString with a blank line inside
         ScenarioToken scenario = feature.getScenarios().get(2);
-        StepToken whenStep = scenario.getSteps().get(1); // "When I receive the following body"
+        StepToken whenStep = scenario.getSteps().get(1);
 
         assertEquals("When", whenStep.getType());
-        assertEquals("I receive the following body\nFirst paragraph\n\nSecond paragraph after blank line",
-                whenStep.getAction());
+        assertEquals("I receive the following body", whenStep.getAction());
+        assertEquals("First paragraph\n\nSecond paragraph after blank line", whenStep.getDocString());
+    }
+
+    @Test
+    public void testStepWithNoDocStringHasNullDocString() throws Exception {
+        FeatureToken feature = parseFeature();
+
+        ScenarioToken scenario = feature.getScenarios().get(2);
+        // "Given I perform setup" has no DocString
+        assertNull(scenario.getSteps().get(0).getDocString());
+        // "Then I verify the result" has no DocString
+        assertNull(scenario.getSteps().get(2).getDocString());
     }
 
     @Test
@@ -93,42 +107,9 @@ public class DocStringParserTest {
         ScenarioToken scenario = feature.getScenarios().get(2);
         assertEquals(3, scenario.getSteps().size());
 
-        StepToken givenStep = scenario.getSteps().get(0);
-        StepToken whenStep  = scenario.getSteps().get(1);
-        StepToken thenStep  = scenario.getSteps().get(2);
-
-        assertEquals("I perform setup", givenStep.getAction());
-        assertTrue(whenStep.getAction().startsWith("I receive the following body\n"));
-        assertEquals("I verify the result", thenStep.getAction());
-    }
-
-    /**
-     * Demonstrates that the DocString action can be matched and captured by a regex pattern
-     * as used in a Handler @Step annotation.
-     *
-     * Given a step action "I receive the following body\nLine One\nLine Two\nLine Three",
-     * a @Step pattern of "I receive the following body\n((?s:.*))\" will capture the
-     * DocString content as a method argument, just like any other captured group.
-     */
-    @Test
-    public void testDocStringContentCapturedByStepRegexGroup() throws Exception {
-        FeatureToken feature = parseFeature();
-
-        ScenarioToken scenario = feature.getScenarios().get(1);
-        StepToken step = scenario.getSteps().get(0);
-        String action = step.getAction();
-
-        // Pattern as it would appear in a @Step annotation on a Handler method:
-        //   @Step("I receive the following body\n((?s:.*))")
-        //   public void receiveBody(String body) { ... }
-        //
-        // (?s:.*) enables DOTALL for the capture group so '.' matches newlines,
-        // allowing the entire multi-line DocString to be captured as one argument.
-        Pattern stepPattern = Pattern.compile("I receive the following body\n((?s:.*))");
-        Matcher matcher = stepPattern.matcher(action);
-
-        assertTrue("Step pattern should match action containing DocString", matcher.matches());
-        assertEquals("Line One\nLine Two\nLine Three", matcher.group(1));
+        assertEquals("I perform setup",             scenario.getSteps().get(0).getAction());
+        assertEquals("I receive the following body", scenario.getSteps().get(1).getAction());
+        assertEquals("I verify the result",          scenario.getSteps().get(2).getAction());
     }
 
     // -----------------------------------------------------------------------

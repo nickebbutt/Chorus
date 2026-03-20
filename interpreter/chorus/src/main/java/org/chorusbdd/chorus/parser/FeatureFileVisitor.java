@@ -455,7 +455,21 @@ class FeatureFileVisitor extends ChorusFeatureBaseVisitor<Void> {
                 ? ctx.stepText().STEP_TEXT().getText().trim()
                 : "";
 
-        // Append DocString content to the action when present.
+        // Buffer any inline step directives
+        bufferStepDirectives(ctx.stepDirectives(), action, line);
+
+        // Insert step directives BEFORE the step (mirrors DirectiveParser.addStepDirectives behaviour)
+        try {
+            directiveParser.addStepDirectives(new ScenarioTokenStepConsumer(scenario));
+        } catch (ParseException e) {
+            setError(e);
+            return;
+        }
+
+        // Create and add the step (with macro expansion)
+        StepToken stepToken = StepToken.createStep(keyword, action);
+
+        // Set DocString content on the token when present.
         // Each DOCSTRING_LINE token text ends with a newline which is stripped; leading
         // whitespace is dedented by the opening delimiter's column so that content
         // indented to align with """ is presented without spurious leading spaces.
@@ -478,22 +492,9 @@ class FeatureFileVisitor extends ChorusFeatureBaseVisitor<Void> {
                 }
                 docContent.append(lineText);
             }
-            action = action + "\n" + docContent.toString();
+            stepToken.setDocString(docContent.toString());
         }
 
-        // Buffer any inline step directives
-        bufferStepDirectives(ctx.stepDirectives(), action, line);
-
-        // Insert step directives BEFORE the step (mirrors DirectiveParser.addStepDirectives behaviour)
-        try {
-            directiveParser.addStepDirectives(new ScenarioTokenStepConsumer(scenario));
-        } catch (ParseException e) {
-            setError(e);
-            return;
-        }
-
-        // Create and add the step (with macro expansion)
-        StepToken stepToken = StepToken.createStep(keyword, action);
         boolean alreadyMatched = false;
         for (StepMacro m : macros) {
             alreadyMatched = m.processStep(stepToken, macros, alreadyMatched);

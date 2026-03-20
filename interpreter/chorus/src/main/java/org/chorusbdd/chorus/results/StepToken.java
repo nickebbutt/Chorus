@@ -57,6 +57,12 @@ public class StepToken extends AbstractToken {
     private long timeTaken = 0;  //time taken to run the step
 
     /**
+     * The content of a Gherkin DocString block attached to this step, or null if no DocString
+     * was present.  Stored as a plain String so that StepToken remains simply serializable.
+     */
+    private String docString;
+
+    /**
      * Use the static factory methods to create an instance of a StepToken
      */
     private StepToken(String type, String action) {
@@ -77,6 +83,24 @@ public class StepToken extends AbstractToken {
     public void setAction(String action) {
         Objects.requireNonNull(action, "action cannot be null");
         this.action = action;
+    }
+
+    /**
+     * @return the content of a Gherkin DocString block attached to this step, or
+     *         {@code null} if no DocString was present in the feature file.
+     */
+    public String getDocString() {
+        return docString;
+    }
+
+    /**
+     * Set the DocString content for this step.  Called by the parser when a
+     * {@code """ ... """} block is found immediately after the step line.
+     *
+     * @param docString the dedented DocString content, or {@code null} to clear it
+     */
+    public void setDocString(String docString) {
+        this.docString = docString;
     }
 
     public StepEndState getEndState() {
@@ -214,6 +238,7 @@ public class StepToken extends AbstractToken {
         copy.throwable = this.throwable;
         copy.timeTaken = this.timeTaken;
         copy.childSteps = recursiveCopy(childSteps);
+        copy.docString = this.docString;
         return copy;
     }
 

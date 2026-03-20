@@ -100,9 +100,19 @@ public interface StepInvoker {
     String getCategory();
 
     /**
-     * 
+     *
      * @return true if this step is deprecated which implies that support for it may be discontinued in future releases
      */
     boolean isDeprecated();
+
+    /**
+     * @return true if this invoker's step method declares a
+     *         {@link org.chorusbdd.chorus.annotations.DocString} as its final parameter,
+     *         meaning a DocString value must be present on the StepToken at invocation time.
+     *         Returns false by default (remote and other non-method invokers do not support DocString).
+     */
+    default boolean requiresDocString() {
+        return false;
+    }
 
 }
