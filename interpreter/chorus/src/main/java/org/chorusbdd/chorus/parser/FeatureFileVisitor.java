@@ -455,6 +455,32 @@ class FeatureFileVisitor extends ChorusFeatureBaseVisitor<Void> {
                 ? ctx.stepText().STEP_TEXT().getText().trim()
                 : "";
 
+        // Append DocString content to the action when present.
+        // Each DOCSTRING_LINE token text ends with a newline which is stripped; leading
+        // whitespace is dedented by the opening delimiter's column so that content
+        // indented to align with """ is presented without spurious leading spaces.
+        if (ctx.docString() != null) {
+            int delimiterColumn = ctx.docString().DOCSTRING_DELIMITER().getSymbol().getCharPositionInLine();
+            StringBuilder docContent = new StringBuilder();
+            for (TerminalNode lineNode : ctx.docString().DOCSTRING_LINE()) {
+                String lineText = lineNode.getText();
+                // Strip trailing newline (CRLF or LF) from the token text
+                if (lineText.endsWith("\r\n")) {
+                    lineText = lineText.substring(0, lineText.length() - 2);
+                } else if (lineText.endsWith("\n")) {
+                    lineText = lineText.substring(0, lineText.length() - 1);
+                }
+                // Dedent by the delimiter's column (handles blank lines gracefully)
+                int stripChars = Math.min(delimiterColumn, lineText.length());
+                lineText = lineText.substring(stripChars);
+                if (docContent.length() > 0) {
+                    docContent.append("\n");
+                }
+                docContent.append(lineText);
+            }
+            action = action + "\n" + docContent.toString();
+        }
+
         // Buffer any inline step directives
         bufferStepDirectives(ctx.stepDirectives(), action, line);
 

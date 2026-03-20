@@ -132,9 +132,18 @@ directiveText
     : STEP_TEXT ( DIRECTIVE_MARKER STEP_TEXT )*
     ;
 
-// A step line: keyword + action text + optional inline directives
+// A step line: keyword + action text + optional inline directives, followed by an
+// optional DocString block (""" ... """) whose content is appended to the step action.
 step
     : stepKeyword stepText stepDirectives? NEWLINE
+      docString?
+    ;
+
+// A DocString block: opening """ line, zero or more content lines, closing """ line.
+docString
+    : DOCSTRING_DELIMITER
+      DOCSTRING_LINE*
+      DOCSTRING_CLOSE
     ;
 
 stepKeyword

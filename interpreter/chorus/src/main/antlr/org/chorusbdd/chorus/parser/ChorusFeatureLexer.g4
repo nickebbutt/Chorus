@@ -52,7 +52,7 @@ K_CHECK : { atLineStart }? 'Check'  -> pushMode(STEP_LINE) ;
 // 'With', 'Ensure', 'I', 'Verify', etc.  Structural keywords (Feature:, Scenario:,
 // etc.) always win via maximum munch since they include ':' or '-' making them longer.
 // Listed AFTER the K_GIVEN/K_WHEN/... rules so those take priority for equal-length matches.
-STEP_KW : { atLineStart }? [A-Za-z][A-Za-z0-9]* -> pushMode(STEP_LINE) ;
+STEP_KW : { atLineStart }? [A-Za-z][A-Za-z0-9_]* -> pushMode(STEP_LINE) ;
 
 // Tag line (one or more @tags).
 // Sets atLineStart = false so that trailing whitespace + newline after a tag cannot
@@ -84,6 +84,11 @@ BLANK_LINE  : { atLineStart }? [ \t]+ '\r'? '\n' { atLineStart = true; } -> skip
 // Does NOT reset atLineStart so that a keyword following leading whitespace
 // is still considered to be at the start of a line.
 WS          : [ \t]+ -> channel(HIDDEN) ;
+
+// DocString opening delimiter: three double-quotes at line-start, consumes the rest of
+// the line (any content-type annotation and the newline) and enters DOCSTRING_MODE.
+// Must appear before DESCRIPTION_TEXT_CHAR so the 3-char token wins via maximum munch.
+DOCSTRING_DELIMITER : { atLineStart }? '"""' ~[\r\n]* '\r'? '\n' { atLineStart = true; } -> pushMode(DOCSTRING_MODE) ;
 
 // Single-character catch-all for description text (feature descriptions, etc.).
 // Marks atLineStart = false so that any keyword appearing later on the same line
@@ -139,6 +144,25 @@ STEP_WS    : [ \t]+ -> channel(HIDDEN) ;
 
 // End of step line — pop STEP_LINE, return to caller mode
 STEP_NEWLINE : '\r'? '\n' { atLineStart = true; } -> type(NEWLINE), popMode ;
+
+
+// ============================================================
+// DOCSTRING_MODE
+// Captures content lines between """ delimiters.
+// Entered from DEFAULT_MODE after a DOCSTRING_DELIMITER token.
+// ============================================================
+
+mode DOCSTRING_MODE;
+
+// Closing delimiter: optional leading whitespace then """ to end of line.
+// Listed before DOCSTRING_LINE so it wins via first-rule tie-break when a line
+// starts with """ (both rules would otherwise match the same length).
+DOCSTRING_CLOSE : { atLineStart }? [ \t]* '"""' ~[\r\n]* '\r'? '\n' { atLineStart = true; } -> popMode ;
+
+// Content line: any line that does not match DOCSTRING_CLOSE.
+// Captures the full line text including any leading indentation; the trailing
+// newline is stripped by the visitor when building the step action string.
+DOCSTRING_LINE  : ~[\r\n]* '\r'? '\n' { atLineStart = true; } ;
 
 
 // ============================================================
