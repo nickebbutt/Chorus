@@ -23,8 +23,6 @@
  */
 package org.chorusbdd.chorus.websockets;
 
-import org.chorusbdd.chorus.annotations.Handler;
-import org.chorusbdd.chorus.annotations.Step;
 import org.chorusbdd.chorus.logging.LogLevel;
 import org.chorusbdd.chorus.logging.StdOutLogProvider;
 import org.chorusbdd.chorus.websockets.client.WebSocketStepPublisher;
@@ -42,7 +40,6 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
@@ -57,7 +54,6 @@ public class TestWebSocketStepPublisher {
     private static WebSocketStepPublisher stepPublisher;
     private static WebSocketMessageProcessor mockProcessor;
     private static final ChorusWebSocketServer chorusWebSocketServer = new ChorusWebSocketServer(9080);
-    private static final AtomicBoolean stepCalled = new AtomicBoolean();
 
     @BeforeClass
     public static void startTestServer() {
@@ -82,21 +78,12 @@ public class TestWebSocketStepPublisher {
         chorusWebSocketServer.stop();
     }
 
-    @Handler("Test Step Publisher Handler")
-    public static class MockHandler {
-
-        @Step(value = "call a test step", id = "step1")
-        public void callATestStep() {
-            System.out.println("Hello!");
-            stepCalled.set(true);
-        }
-    }
-
     @Test
     public void aClientCanPublishAStepAndAServerCanExecuteIt() {
 
         URI uri = URI.create("ws://localhost:9080");
-        stepPublisher = new WebSocketStepPublisher("testPublisher", uri, new MockHandler());
+        MockHandler mockHandler = new MockHandler();
+        stepPublisher = new WebSocketStepPublisher("testPublisher", uri, mockHandler);
         stepPublisher.publish();
 
         PublishStepMessage publishStepMessage = new PublishStepMessage(
@@ -125,7 +112,7 @@ public class TestWebSocketStepPublisher {
         new PolledAssertion() {
             @Override
             protected void validate() throws Exception {
-                assertTrue(stepCalled.get());
+                assertTrue(mockHandler.wasStepCalled());
             }
         }.await(TimeUnit.SECONDS, 2);
 
