@@ -57,6 +57,8 @@ class WebSocketClientStepInvoker extends SkeletalStepInvoker {
     private final String stepId;
     private final String technicalDescription;
     private final int timeoutSeconds;
+    private final boolean requiresDocString;
+    private final boolean requiresDataTable;
 
     private ExecutingStep NO_STEP_EXECUTING = new ExecutingStep("NO_STEP_EXECUTING");
 
@@ -70,13 +72,17 @@ class WebSocketClientStepInvoker extends SkeletalStepInvoker {
             String technicalDescription,
             String pendingMessage,
             int timeoutSeconds,
-            StepRetry stepRetry) throws InvalidStepException {
+            StepRetry stepRetry,
+            boolean requiresDocString,
+            boolean requiresDataTable) throws InvalidStepException {
         super(pendingMessage, stepPattern, stepRetry, "WebSocket: " + clientId, false);
         this.messageRouter = messageRouter;
         this.clientId = clientId;
         this.stepId = stepId;
         this.technicalDescription = technicalDescription;
         this.timeoutSeconds = timeoutSeconds;
+        this.requiresDocString = requiresDocString;
+        this.requiresDataTable = requiresDataTable;
     }
 
     @Override
@@ -140,12 +146,12 @@ class WebSocketClientStepInvoker extends SkeletalStepInvoker {
 
     @Override
     public boolean requiresDocString() {
-        return false;
+        return requiresDocString;
     }
 
     @Override
     public boolean requiresDataTable() {
-        return false;
+        return requiresDataTable;
     }
 
     public String getClientId() {
@@ -175,7 +181,9 @@ class WebSocketClientStepInvoker extends SkeletalStepInvoker {
             publishStepMessage.getTechnicalDescription(),
             publishStepMessage.getPendingMessage(),
             timeoutSeconds,
-            stepRetry
+            stepRetry,
+            publishStepMessage.isRequiresDocString(),
+            publishStepMessage.isRequiresDataTable()
         );
     }
 

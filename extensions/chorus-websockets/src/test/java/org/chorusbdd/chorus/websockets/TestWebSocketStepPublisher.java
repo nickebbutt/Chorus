@@ -94,7 +94,9 @@ public class TestWebSocketStepPublisher {
             "org.chorusbdd.chorus.annotations.Step.NO_PENDING_MESSAGE",
             "MockHandler:callATestStep",
             0,
-            0
+            0,
+            false,
+            false
         );
         verify(mockProcessor, timeout(1000)).receivePublishStep(publishStepMessage);
 
