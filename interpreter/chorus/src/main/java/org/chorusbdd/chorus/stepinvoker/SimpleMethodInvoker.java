@@ -26,7 +26,6 @@ package org.chorusbdd.chorus.stepinvoker;
 import org.chorusbdd.chorus.annotations.DataTable;
 import org.chorusbdd.chorus.annotations.DocString;
 
-import java.util.Map;
 import org.chorusbdd.chorus.annotations.Step;
 import org.chorusbdd.chorus.logging.ChorusLog;
 import org.chorusbdd.chorus.logging.ChorusLogFactory;
@@ -112,25 +111,20 @@ public class SimpleMethodInvoker extends SkeletalStepInvoker {
         for (int i = 0; i < args.size(); i++) {
             Object arg = args.get(i);
             Class type = parameterTypes[i];
-            if (DataTable.class.equals(type) && arg instanceof List) {
-                values[i] = new DataTable((List<Map<String, String>>) arg);
+            Object coercedValue = TypeCoercion.coerceType(log, arg, type);
+            if (("null".equals(arg) && coercedValue == null) || coercedValue != null) {
+                values[i] = coercedValue;
             } else {
-                String valueStr = (String) arg;
-                Object coercedValue = TypeCoercion.coerceType(log, valueStr, type);
-                if (("null".equals(valueStr) && coercedValue == null) || coercedValue != null) {
-                    values[i] = coercedValue;
-                } else {
-                    //the type coercion failed for this method parameter
-                    //return null to indicate this reg exp / method is not a match
-                    //log at info level that we found a match but could not perform the coercion  - this will not show
-                    //at the default log level warn, but will show as soon as user increases it
-                    //It seems valid to support a form of method parameter overloading here, where two methods have
-                    //the same regex but different class types for their parameters, logging at warn by default might
-                    //get irritating in this case
-                    String message = "Matched step but could not coerce " + valueStr + " to type " + type;
-                    log.info(message);
-                    throw new IllegalArgumentException(message);
-                }
+                //the type coercion failed for this method parameter
+                //return null to indicate this reg exp / method is not a match
+                //log at info level that we found a match but could not perform the coercion  - this will not show
+                //at the default log level warn, but will show as soon as user increases it
+                //It seems valid to support a form of method parameter overloading here, where two methods have
+                //the same regex but different class types for their parameters, logging at warn by default might
+                //get irritating in this case
+                String message = "Matched step but could not coerce " + arg + " to type " + type;
+                log.info(message);
+                throw new IllegalArgumentException(message);
             }
         }
         return values;
