@@ -19,3 +19,11 @@ Feature: DocString
       """
     Then the body should have 3 lines
 
+  Scenario: DocString can follow capture groups in the step expression
+    Given I receive the following body labeled greeting
+      """
+      Hello World
+      """
+    Then the label should be greeting
+    And the body should equal Hello World
+

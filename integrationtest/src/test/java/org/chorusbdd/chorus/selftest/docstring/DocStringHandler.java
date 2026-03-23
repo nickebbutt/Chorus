@@ -31,9 +31,16 @@ import org.chorusbdd.chorus.annotations.Step;
 public class DocStringHandler {
 
     private String receivedBody;
+    private String receivedLabel;
 
     @Step("I receive the following body")
     public void iReceiveTheFollowingBody(DocString body) {
+        receivedBody = body.getContent();
+    }
+
+    @Step("I receive the following body labeled (.+)")
+    public void iReceiveTheFollowingBodyLabeled(String label, DocString body) {
+        receivedLabel = label;
         receivedBody = body.getContent();
     }
 
@@ -41,6 +48,13 @@ public class DocStringHandler {
     public void theBodyShouldEqual(String expected) {
         if (!expected.equals(receivedBody)) {
             throw new AssertionError("Expected body '" + expected + "' but was '" + receivedBody + "'");
+        }
+    }
+
+    @Step("the label should be (.+)")
+    public void theLabelShouldBe(String expected) {
+        if (!expected.equals(receivedLabel)) {
+            throw new AssertionError("Expected label '" + expected + "' but was '" + receivedLabel + "'");
         }
     }
 
