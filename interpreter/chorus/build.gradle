@@ -4,47 +4,44 @@ apply plugin: 'antlr'
 
 description = "chorus"
 
-// Configure the ANTLR plugin's built-in generateGrammarSource task.
-// The plugin automatically adds the output directory to sourceSets.main.java.srcDirs
-// and wires compileJava to depend on this task.
-//
 // Split-grammar ordering problem: ANTLR's Tool sorts grammar files alphabetically, so
 // ChorusFeature.g4 (parser) is always processed before ChorusFeatureLexer.g4 (lexer).
 // The parser declares tokenVocab = ChorusFeatureLexer, which requires ChorusFeatureLexer.tokens
-// to already exist. We fix this by pre-generating just the lexer in doFirst so the tokens
-// file is present before the main invocation runs, then using -lib to tell ANTLR where to
-// find it.
+// to already exist. We fix this by pre-generating just the lexer via a dedicated JavaExec task
+// so the tokens file is present before the main generateGrammarSource invocation runs,
+// then using -lib to tell ANTLR where to find it.
+
+// Step 1: Run ANTLR on the lexer grammar only to produce ChorusFeatureLexer.tokens
+task generateLexerTokens(type: JavaExec) {
+    description = 'Pre-generates ANTLR lexer tokens file required by the parser grammar'
+    workingDir = file('src/main/antlr')
+    classpath = configurations.antlr
+    mainClass = 'org.antlr.v4.Tool'
+    def prereqDir = layout.buildDirectory.dir('antlr-prereqs')
+    args '-o', prereqDir.get().asFile.absolutePath,
+         '-package', 'org.chorusbdd.chorus.parser',
+         'org/chorusbdd/chorus/parser/ChorusFeatureLexer.g4'
+    outputs.dir(prereqDir)
+    doFirst {
+        prereqDir.get().asFile.mkdirs()
+    }
+}
+
+// Step 2: Copy the .tokens file into the ANTLR -lib directory
+task copyLexerTokens(type: Copy) {
+    description = 'Copies ANTLR tokens file to the library directory for grammar generation'
+    dependsOn generateLexerTokens
+    from layout.buildDirectory.dir('antlr-prereqs')
+    into layout.buildDirectory.dir('antlr-lib')
+    include '**/*.tokens'
+}
+
+// Step 3: Generate the full grammar (parser + lexer), with the tokens file already present
 generateGrammarSource {
     maxHeapSize = "64m"
-
-    // ANTLR sorts grammar files alphabetically, processing ChorusFeature.g4 (parser)
-    // before ChorusFeatureLexer.g4 (lexer). The parser needs ChorusFeatureLexer.tokens
-    // which doesn't exist yet. Pre-generate just the lexer in a temp directory so the
-    // tokens file is ready, then copy it to the -lib directory before the main run.
-    doFirst {
-        def prereqDir = file("${buildDir}/antlr-prereqs")
-        prereqDir.mkdirs()
-        project.javaexec {
-            workingDir = file('src/main/antlr')
-            classpath = project.configurations.antlr
-            mainClass = 'org.antlr.v4.Tool'
-            args = [
-                '-o', prereqDir.absolutePath,
-                '-package', 'org.chorusbdd.chorus.parser',
-                'org/chorusbdd/chorus/parser/ChorusFeatureLexer.g4'
-            ]
-        }
-        def libDir = file("${buildDir}/antlr-lib")
-        libDir.mkdirs()
-        project.copy {
-            from prereqDir
-            into libDir
-            include '**/*.tokens'
-        }
-    }
-
+    dependsOn copyLexerTokens
     arguments += ["-visitor", "-no-listener", "-package", "org.chorusbdd.chorus.parser",
-                  "-lib", file("${buildDir}/antlr-lib").absolutePath]
+                  "-lib", layout.buildDirectory.dir('antlr-lib').get().asFile.absolutePath]
 }
 
 sourceSets {
@@ -80,11 +77,16 @@ task createChorusVersionResource(type: Copy) {
 }
 
 processResources.dependsOn createChorusVersionResource
+tasks.named('sourcesJar').configure {
+    dependsOn createChorusVersionResource
+    dependsOn generateGrammarSource
+}
 
 // The license plugin scans all Java source dirs including the ANTLR-generated output dir.
 // Exclude generated files from the license header check since ANTLR doesn't add headers.
 afterEvaluate {
     licenseMain.source = sourceSets.main.allJava.filter { !it.absolutePath.contains('generated-src') }
+    licenseTest.source = sourceSets.test.allJava.filter { !it.absolutePath.contains('generated-src') }
 }
 
 
