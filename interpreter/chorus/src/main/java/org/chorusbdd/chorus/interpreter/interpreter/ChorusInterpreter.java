@@ -254,7 +254,7 @@ public class ChorusInterpreter {
 
         scenarioTimeoutStopThread = timeoutExcecutor.schedule(new Runnable() {
             public void run() {
-                stopThreadIfStillRunning(t);
+                timeoutIfStillRunning(t);
             }
         }, scenarioTimeoutMillis * 2, TimeUnit.MILLISECONDS);
 
@@ -279,16 +279,8 @@ public class ChorusInterpreter {
         }
     }
 
-    private void stopThreadIfStillRunning(Thread t) {
-        if ( t.isAlive()) {
-            log.error("Scenario did not respond to interrupt after timeout, " +
-                    "will stop the interpreter thread and fail the tests");
-            t.stop(); //this will trigger a ThreadDeath exception which we should allow to propagate and will terminate the interpreter
-        }
-    }
-
     private void killInterpreterIfStillRunning(Thread t) {
-        if ( t.isAlive()) {
+        if (t.isAlive()) {
             log.error("Scenario did not respond to thread.kill() after timeout, will now kill the interpreter");
             System.exit(1);
         }
