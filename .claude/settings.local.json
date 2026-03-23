@@ -94,7 +94,12 @@
       "Bash(grep -r OUTPUT_FORMATTER /c/dev/chorus-nick/interpreter/ --include=*.java -l)",
       "Bash(./gradlew :integrationtest:compileTestJava)",
       "Bash(./gradlew :integrationtest:test --tests \"*TestDataTable*\")",
-      "Bash(./gradlew :integrationtest:test --tests \"*TestDataTable*\" -DchorusSelfTestsOverwriteStdOutAndErr=true)"
+      "Bash(./gradlew :integrationtest:test --tests \"*TestDataTable*\" -DchorusSelfTestsOverwriteStdOutAndErr=true)",
+      "Bash(find C:/dev/chorus-nick -name *.java -type f -exec grep -l \"implements StepInvoker\\\\|extends PolledInvoker\\\\|extends SkeletalStepInvoker\" {})",
+      "Bash(2)",
+      "Bash(./gradlew :chorus:compileJava :integrationtest:compileTestJava)",
+      "Bash(./gradlew :chorus-websockets:compileJava)",
+      "Bash(./gradlew :chorus:test :integrationtest:test --tests \"*TestDataTable*\" --tests \"*TestDocString*\")"
     ]
   }
 }

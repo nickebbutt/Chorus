@@ -137,6 +137,17 @@ class WebSocketClientStepInvoker extends SkeletalStepInvoker {
         return technicalDescription;
     }
 
+
+    @Override
+    public boolean requiresDocString() {
+        return false;
+    }
+
+    @Override
+    public boolean requiresDataTable() {
+        return false;
+    }
+
     public String getClientId() {
         return clientId;
     }

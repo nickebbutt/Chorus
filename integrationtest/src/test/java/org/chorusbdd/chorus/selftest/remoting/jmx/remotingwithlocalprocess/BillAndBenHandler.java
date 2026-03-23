@@ -90,6 +90,16 @@ public class BillAndBenHandler implements StepInvokerProvider {
             public boolean isDeprecated() {
                 return false;
             }
+
+            @Override
+            public boolean requiresDocString() {
+                return false;
+            }
+
+            @Override
+            public boolean requiresDataTable() {
+                return false;
+            }
         };
 
         StepInvoker two = new StepInvoker() {
@@ -138,6 +148,16 @@ public class BillAndBenHandler implements StepInvokerProvider {
 
             @Override
             public boolean isDeprecated() {
+                return false;
+            }
+
+            @Override
+            public boolean requiresDocString() {
+                return false;
+            }
+
+            @Override
+            public boolean requiresDataTable() {
                 return false;
             }
         };

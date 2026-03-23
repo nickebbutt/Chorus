@@ -136,6 +136,16 @@ public class RemoteStepInvoker implements StepInvoker {
         return deprecated;
     }
 
+    @Override
+    public boolean requiresDocString() {
+        return false;
+    }
+
+    @Override
+    public boolean requiresDataTable() {
+        return false;
+    }
+
     public String toString() {
         return pattern.toString();
     }

@@ -120,6 +120,10 @@ public abstract class PolledInvoker implements StepInvoker {
     }
     
     public boolean isDeprecated() { return wrappedInvoker.isDeprecated(); }
-    
+
     public String getCategory() { return wrappedInvoker.getCategory(); }
+
+    public boolean requiresDocString() { return wrappedInvoker.requiresDocString(); }
+
+    public boolean requiresDataTable() { return wrappedInvoker.requiresDataTable(); }
 }

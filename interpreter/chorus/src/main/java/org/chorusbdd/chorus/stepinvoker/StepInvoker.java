@@ -109,20 +109,14 @@ public interface StepInvoker {
      * @return true if this invoker's step method declares a
      *         {@link org.chorusbdd.chorus.annotations.DocString} as its final parameter,
      *         meaning a DocString value must be present on the StepToken at invocation time.
-     *         Returns false by default (remote and other non-method invokers do not support DocString).
      */
-    default boolean requiresDocString() {
-        return false;
-    }
+    boolean requiresDocString();
 
     /**
      * @return true if this invoker expects a
      *         {@link org.chorusbdd.chorus.annotations.DataTable} as its final parameter,
      *         meaning a data table must be present on the StepToken at invocation time.
-     *         Returns false by default (remote and other non-method invokers do not support DataTable).
      */
-    default boolean requiresDataTable() {
-        return false;
-    }
+    boolean requiresDataTable();
 
 }

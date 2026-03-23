@@ -84,4 +84,14 @@ public class StepInvokerWrapper implements StepInvoker {
     public boolean isDeprecated() {
         return wrappedInvoker.isDeprecated();
     }
+
+    @Override
+    public boolean requiresDocString() {
+        return wrappedInvoker.requiresDocString();
+    }
+
+    @Override
+    public boolean requiresDataTable() {
+        return wrappedInvoker.requiresDataTable();
+    }
 }
