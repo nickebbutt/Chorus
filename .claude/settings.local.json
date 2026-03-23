@@ -99,7 +99,8 @@
       "Bash(2)",
       "Bash(./gradlew :chorus:compileJava :integrationtest:compileTestJava)",
       "Bash(./gradlew :chorus-websockets:compileJava)",
-      "Bash(./gradlew :chorus:test :integrationtest:test --tests \"*TestDataTable*\" --tests \"*TestDocString*\")"
+      "Bash(./gradlew :chorus:test :integrationtest:test --tests \"*TestDataTable*\" --tests \"*TestDocString*\")",
+      "Bash(./gradlew :chorus:test :integrationtest:test --tests \"*TestDataTable*\" --tests \"*TestDocString*\" --tests \"*TestJmxExecutionListener*\")"
     ]
   }
 }

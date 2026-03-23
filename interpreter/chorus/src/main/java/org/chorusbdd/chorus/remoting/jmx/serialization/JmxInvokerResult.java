@@ -45,6 +45,8 @@ public class JmxInvokerResult extends AbstractJmxDTO {
     public static final String RETRY_DURATION = "RETRY_DURATION";
     public static final String RETRY_INTERVAL = "RETRY_INTERVAL";
     public static final String IS_DEPRECATED = "IS_DEPRECATED";
+    public static final String REQUIRES_DOC_STRING = "REQUIRES_DOC_STRING";
+    public static final String REQUIRES_DATA_TABLE = "REQUIRES_DATA_TABLE";
 
 
     /**
@@ -61,6 +63,8 @@ public class JmxInvokerResult extends AbstractJmxDTO {
         put(RETRY_DURATION, i.getRetry().getDuration());
         put(RETRY_INTERVAL, i.getRetry().getInterval());
         put(IS_DEPRECATED, i.isDeprecated());
+        put(REQUIRES_DOC_STRING, i.requiresDocString());
+        put(REQUIRES_DATA_TABLE, i.requiresDataTable());
     }
 
 }
