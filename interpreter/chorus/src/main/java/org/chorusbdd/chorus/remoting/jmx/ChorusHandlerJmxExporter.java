@@ -152,7 +152,7 @@ public class ChorusHandlerJmxExporter implements ChorusHandlerJmxExporterMBean {
         return this;
     }
 
-    public JmxStepResult invokeStep(String stepInvokerId, String stepTokenId, Map chorusContext, List<String> args) throws Exception {
+    public JmxStepResult invokeStep(String stepInvokerId, String stepTokenId, Map chorusContext, List<Object> args) throws Exception {
 
         //log debug messages
         if (log.isDebugEnabled()) {

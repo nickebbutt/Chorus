@@ -25,6 +25,8 @@ package org.chorusbdd.chorus.stepinvoker;
 
 import org.chorusbdd.chorus.annotations.DataTable;
 import org.chorusbdd.chorus.annotations.DocString;
+
+import java.util.Map;
 import org.chorusbdd.chorus.annotations.Step;
 import org.chorusbdd.chorus.logging.ChorusLog;
 import org.chorusbdd.chorus.logging.ChorusLogFactory;
@@ -61,7 +63,7 @@ public class SimpleMethodInvoker extends SkeletalStepInvoker {
                 stepId;
     }
 
-    public Object invoke(final String stepTokenId, List<String> args) throws ReflectiveOperationException {
+    public Object invoke(final String stepTokenId, List<Object> args) throws ReflectiveOperationException {
         Class<?>[] parameterTypes = getMethod().getParameterTypes();
 
         checkArgumentCount(args, parameterTypes);
@@ -94,7 +96,7 @@ public class SimpleMethodInvoker extends SkeletalStepInvoker {
                 && DataTable.class.equals(parameterTypes[parameterTypes.length - 1]);
     }
 
-    private void checkArgumentCount(List<String> args, Class<?>[] parameterTypes) {
+    private void checkArgumentCount(List<Object> args, Class<?>[] parameterTypes) {
         //check that there are the same number of expected values as there are regex groups
         if (args.size() != parameterTypes.length) {
             //I think this is always an error in the handler's step definition - group should always match param count
@@ -105,25 +107,30 @@ public class SimpleMethodInvoker extends SkeletalStepInvoker {
         }
     }
 
-    private Object[] coerceArgs(List<String> args, Class<?>[] parameterTypes) {
+    private Object[] coerceArgs(List<Object> args, Class<?>[] parameterTypes) {
         Object[] values = new Object[args.size()];
         for (int i = 0; i < args.size(); i++) {
-            String valueStr = args.get(i);
+            Object arg = args.get(i);
             Class type = parameterTypes[i];
-            Object coercedValue = TypeCoercion.coerceType(log, valueStr, type);
-            if (("null".equals(valueStr) && coercedValue == null ) || coercedValue != null) {
-                values[i] = coercedValue;
+            if (DataTable.class.equals(type) && arg instanceof List) {
+                values[i] = new DataTable((List<Map<String, String>>) arg);
             } else {
-                //the type coercion failed for this method parameter
-                //return null to indicate this reg exp / method is not a match
-                //log at info level that we found a match but could not perform the coercion  - this will not show
-                //at the default log level warn, but will show as soon as user increases it
-                //It seems valid to support a form of method parameter overloading here, where two methods have
-                //the same regex but different class types for their parameters, logging at warn by default might
-                //get irritating in this case
-                String message = "Matched step but could not coerce " + valueStr + " to type " + type;
-                log.info(message);
-                throw new IllegalArgumentException(message);
+                String valueStr = (String) arg;
+                Object coercedValue = TypeCoercion.coerceType(log, valueStr, type);
+                if (("null".equals(valueStr) && coercedValue == null) || coercedValue != null) {
+                    values[i] = coercedValue;
+                } else {
+                    //the type coercion failed for this method parameter
+                    //return null to indicate this reg exp / method is not a match
+                    //log at info level that we found a match but could not perform the coercion  - this will not show
+                    //at the default log level warn, but will show as soon as user increases it
+                    //It seems valid to support a form of method parameter overloading here, where two methods have
+                    //the same regex but different class types for their parameters, logging at warn by default might
+                    //get irritating in this case
+                    String message = "Matched step but could not coerce " + valueStr + " to type " + type;
+                    log.info(message);
+                    throw new IllegalArgumentException(message);
+                }
             }
         }
         return values;

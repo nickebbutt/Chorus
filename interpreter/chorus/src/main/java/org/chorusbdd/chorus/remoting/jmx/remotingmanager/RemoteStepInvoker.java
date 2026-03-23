@@ -103,7 +103,7 @@ public class RemoteStepInvoker implements StepInvoker {
      * Invoke the method
      * @return the result returned by the step method, or VOID_RESULT if the step method has a void return type
      */
-    public Object invoke(final String stepTokenId, List<String> args) {
+    public Object invoke(final String stepTokenId, List<Object> args) {
         Object result;
         try {
             result = proxy.invokeStep(remoteStepId, stepTokenId, args);

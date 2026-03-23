@@ -32,7 +32,6 @@ import org.chorusbdd.chorus.results.ExecutionToken;
 import org.chorusbdd.chorus.results.StepEndState;
 import org.chorusbdd.chorus.results.StepToken;
 import org.chorusbdd.chorus.stepinvoker.*;
-import org.chorusbdd.chorus.stepinvoker.TypeCoercion;
 import org.chorusbdd.chorus.stepinvoker.catalogue.StepCatalogue;
 import org.chorusbdd.chorus.util.ChorusException;
 import org.chorusbdd.chorus.util.ExceptionHandling;
@@ -45,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -265,7 +265,7 @@ public class StepProcessor {
     }
 
     private Object invokeAndGetResult(StepToken step, StepMatcher stepMatcher, StepInvoker foundStepInvoker) throws Exception {
-        List<String> args = stepMatcher.getInvokerArgs();
+        List<Object> args = stepMatcher.getInvokerArgs();
 
         // If the matched step method expects a DocString as its final parameter, append the
         // step's DocString content to the argument list so TypeCoercion can produce the value.
@@ -280,18 +280,17 @@ public class StepProcessor {
             args.add(docString);
         }
 
-        // If the matched step method expects a DataTable as its final parameter, set the table
-        // into the TypeCoercion ThreadLocal and append the sentinel placeholder to the args list.
+        // If the matched step method expects a DataTable as its final parameter, append the
+        // data table directly to the argument list as a List<Map<String,String>>.
         if (foundStepInvoker.requiresDataTable()) {
-            java.util.List<java.util.Map<String, String>> dataTable = step.getDataTable();
+            List<Map<String, String>> dataTable = step.getDataTable();
             if (dataTable.isEmpty()) {
                 throw new ChorusAssertionError(
                     "Step method expects a DataTable argument but no data table was " +
                     "found in the feature file for step: " + step.getAction());
             }
-            TypeCoercion.PENDING_DATA_TABLE.set(dataTable);
             args = new ArrayList<>(args);
-            args.add(TypeCoercion.DATA_TABLE_SENTINEL);
+            args.add(dataTable);
         }
 
         StepRetryDecorator retryInvoker = new StepRetryDecorator(foundStepInvoker);

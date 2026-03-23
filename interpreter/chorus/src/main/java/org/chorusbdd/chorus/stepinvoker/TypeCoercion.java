@@ -23,7 +23,6 @@
  */
 package org.chorusbdd.chorus.stepinvoker;
 
-import org.chorusbdd.chorus.annotations.DataTable;
 import org.chorusbdd.chorus.annotations.DocString;
 import org.chorusbdd.chorus.logging.ChorusLog;
 import org.chorusbdd.chorus.logging.ChorusLogFactory;
@@ -32,8 +31,6 @@ import org.chorusbdd.chorus.util.RegexpUtils;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -50,18 +47,6 @@ public class TypeCoercion {
     private static Pattern intPattern = Pattern.compile("-?[0-9]+");
 
     /**
-     * Sentinel value placed in the args list to signal that the final argument should be
-     * supplied from {@link #PENDING_DATA_TABLE} rather than from the string value.
-     */
-    public static final String DATA_TABLE_SENTINEL = "<datatable>";
-
-    /**
-     * ThreadLocal holding the DataTable to inject when TypeCoercion encounters the sentinel value.
-     * Set by StepProcessor before step invocation and cleared after coercion.
-     */
-    public static final ThreadLocal<List<Map<String, String>>> PENDING_DATA_TABLE = new ThreadLocal<>();
-
-    /**
      * Will attempt to convert the String to the required type
      *
      * @return the coerced value, or null if the value cannot be converted to the required type
@@ -72,10 +57,6 @@ public class TypeCoercion {
         try {
             if ( "null".equals(value)) {
                 result = null;
-            } else if (DataTable.class.equals(requiredType)) {
-                List<Map<String, String>> rows = PENDING_DATA_TABLE.get();
-                PENDING_DATA_TABLE.remove();
-                result = (T) new DataTable(rows != null ? rows : java.util.Collections.emptyList());
             } else if (DocString.class.equals(requiredType)) {
                 result = (T) new DocString(value);
             } else if (isStringType(requiredType)) {

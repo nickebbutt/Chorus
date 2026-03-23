@@ -103,7 +103,7 @@ public class ChorusHandlerJmxProxy extends AbstractJmxProxy {
      * @param remoteStepInvokerId the id of the step to call
      * @param params params to pass in the call
      */
-    public Object invokeStep(String remoteStepInvokerId, String stepTokenId, List<String> params) throws Exception {
+    public Object invokeStep(String remoteStepInvokerId, String stepTokenId, List<Object> params) throws Exception {
         try {
             //call the remote method
             Object[] args = {remoteStepInvokerId, stepTokenId, ChorusContext.getContext().getSnapshot(), params};

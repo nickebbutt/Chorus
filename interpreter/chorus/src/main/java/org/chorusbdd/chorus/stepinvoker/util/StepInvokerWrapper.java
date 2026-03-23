@@ -56,7 +56,7 @@ public class StepInvokerWrapper implements StepInvoker {
     }
 
     @Override
-    public Object invoke(String stepTokenId, List<String> args) throws Exception {
+    public Object invoke(String stepTokenId, List<Object> args) throws Exception {
         return wrappedInvoker.invoke(stepTokenId, args);
     }
 
