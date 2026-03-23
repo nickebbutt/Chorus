@@ -213,4 +213,92 @@ public class TestWebSocketStepPublisher {
             }
         }.await(TimeUnit.SECONDS, 2);
     }
+
+    @Test
+    public void aClientCanExecuteAStepWithARegexArgAndADocString() {
+
+        PublishStepMessage expectedPublish = new PublishStepMessage(
+            "postToStep",
+            "testPublisher",
+            "post to (.+)",
+            false,
+            Step.NO_PENDING_MESSAGE,
+            "MockHandler:postTo",
+            0,
+            0,
+            true,
+            false
+        );
+        verify(mockProcessor, timeout(2000)).receivePublishStep(expectedPublish);
+
+        String url = "https://api.example.com/users";
+        String body = "{ \"name\": \"Alice\" }";
+        chorusWebSocketServer.sendMessage("testPublisher", new ExecuteStepMessage(
+            "testPublisher",
+            "postToStep",
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString(),
+            "post to https://api.example.com/users",
+            30,
+            Arrays.asList(url, body),
+            Collections.emptyMap()
+        ));
+
+        new PolledAssertion() {
+            @Override
+            protected void validate() throws Exception {
+                assertEquals(url, mockHandler.getReceivedDocStringArg());
+                DocString received = mockHandler.getReceivedDocString();
+                assertNotNull("Step should have received a DocString", received);
+                assertEquals(body, received.getContent());
+            }
+        }.await(TimeUnit.SECONDS, 2);
+    }
+
+    @Test
+    public void aClientCanExecuteAStepWithARegexArgAndADataTable() {
+
+        PublishStepMessage expectedPublish = new PublishStepMessage(
+            "addUsersStep",
+            "testPublisher",
+            "add users with prefix (.+)",
+            false,
+            Step.NO_PENDING_MESSAGE,
+            "MockHandler:addUsersWithPrefix",
+            0,
+            0,
+            false,
+            true
+        );
+        verify(mockProcessor, timeout(2000)).receivePublishStep(expectedPublish);
+
+        Map<String, String> row1 = new LinkedHashMap<>();
+        row1.put("name", "Alice");
+        Map<String, String> row2 = new LinkedHashMap<>();
+        row2.put("name", "Bob");
+
+        String prefix = "MR_";
+        chorusWebSocketServer.sendMessage("testPublisher", new ExecuteStepMessage(
+            "testPublisher",
+            "addUsersStep",
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString(),
+            "add users with prefix MR_",
+            30,
+            Arrays.asList(prefix, Arrays.asList(row1, row2)),
+            Collections.emptyMap()
+        ));
+
+        new PolledAssertion() {
+            @Override
+            protected void validate() throws Exception {
+                assertEquals(prefix, mockHandler.getReceivedDataTableArg());
+                DataTable received = mockHandler.getReceivedDataTable();
+                assertNotNull("Step should have received a DataTable", received);
+                assertEquals(2, received.getRows().size());
+                assertEquals("Alice", received.getRows().get(0).get("name"));
+                assertEquals("Bob", received.getRows().get(1).get("name"));
+            }
+        }.await(TimeUnit.SECONDS, 2);
+    }
 }

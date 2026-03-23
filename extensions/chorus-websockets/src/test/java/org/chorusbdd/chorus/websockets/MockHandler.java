@@ -44,6 +44,9 @@ public class MockHandler {
         stepCalled.set(true);
     }
 
+    private final AtomicReference<String> receivedDocStringArg = new AtomicReference<>();
+    private final AtomicReference<String> receivedDataTableArg = new AtomicReference<>();
+
     @Step(value = "call a doc string step", id = "docStringStep")
     public void callADocStringStep(DocString docString) {
         receivedDocString.set(docString);
@@ -52,6 +55,18 @@ public class MockHandler {
     @Step(value = "call a data table step", id = "dataTableStep")
     public void callADataTableStep(DataTable dataTable) {
         receivedDataTable.set(dataTable);
+    }
+
+    @Step(value = "post to (.+)", id = "postToStep")
+    public void postTo(String url, DocString body) {
+        receivedDocStringArg.set(url);
+        receivedDocString.set(body);
+    }
+
+    @Step(value = "add users with prefix (.+)", id = "addUsersStep")
+    public void addUsersWithPrefix(String prefix, DataTable table) {
+        receivedDataTableArg.set(prefix);
+        receivedDataTable.set(table);
     }
 
     public boolean wasStepCalled() {
@@ -64,5 +79,13 @@ public class MockHandler {
 
     public DataTable getReceivedDataTable() {
         return receivedDataTable.get();
+    }
+
+    public String getReceivedDocStringArg() {
+        return receivedDocStringArg.get();
+    }
+
+    public String getReceivedDataTableArg() {
+        return receivedDataTableArg.get();
     }
 }

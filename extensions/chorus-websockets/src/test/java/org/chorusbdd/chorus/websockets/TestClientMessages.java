@@ -145,6 +145,78 @@ public class TestClientMessages {
     }
 
     @Test
+    public void iCanSendAPublishStepMessageWithRequiresDocString() {
+        PublishStepMessage publishStep = new PublishStepMessage(
+            "stepId",
+            "chorusClientId",
+            "click the (.*) button",
+            false,
+            Step.NO_PENDING_MESSAGE,
+            "tech description",
+            0,
+            100,
+            true,
+            false
+        );
+
+        String json = JsonUtils.prettyFormat(publishStep);
+        webSocketClient.send(json);
+
+        verify(mockProcessor, timeout(1000)).receivePublishStep(publishStep);
+    }
+
+    @Test
+    public void iCanSendAPublishStepMessageWithRequiresDataTable() {
+        PublishStepMessage publishStep = new PublishStepMessage(
+            "stepId",
+            "chorusClientId",
+            "click the (.*) button",
+            false,
+            Step.NO_PENDING_MESSAGE,
+            "tech description",
+            0,
+            100,
+            false,
+            true
+        );
+
+        String json = JsonUtils.prettyFormat(publishStep);
+        webSocketClient.send(json);
+
+        verify(mockProcessor, timeout(1000)).receivePublishStep(publishStep);
+    }
+
+    @Test
+    public void iCanSendAPublishStepMessageWithNoRequiresDocStringOrRequiresDataTableField() {
+        // Omitting requiresDocString and requiresDataTable from the JSON should default both to false
+        // for backwards compatibility with older clients that don't send these fields
+        String json = "{\n" +
+            "  \"chorusClientId\" : \"chorusClientId\",\n" +
+            "  \"pattern\" : \"click the (.*) button\",\n" +
+            "  \"stepId\" : \"backCompatStepId\",\n" +
+            "  \"technicalDescription\" : \"tech description\",\n" +
+            "  \"type\" : \"PUBLISH_STEP\"\n" +
+            "}";
+
+        webSocketClient.send(json);
+
+        PublishStepMessage expectedPublishStep = new PublishStepMessage(
+            "backCompatStepId",
+            "chorusClientId",
+            "click the (.*) button",
+            false,
+            Step.NO_PENDING_MESSAGE,
+            "tech description",
+            0,
+            100,
+            false,
+            false
+        );
+
+        verify(mockProcessor, timeout(1000)).receivePublishStep(expectedPublishStep);
+    }
+
+    @Test
     public void iCanSendAStepsAlignedMessage() {
         StepsAlignedMessage stepsAlignedMessage = new StepsAlignedMessage("mockClient");
         String json = JsonUtils.prettyFormat(stepsAlignedMessage);
