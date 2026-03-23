@@ -23,6 +23,9 @@
  */
 package org.chorusbdd.chorus.websockets;
 
+import org.chorusbdd.chorus.annotations.DataTable;
+import org.chorusbdd.chorus.annotations.DocString;
+import org.chorusbdd.chorus.annotations.Step;
 import org.chorusbdd.chorus.logging.LogLevel;
 import org.chorusbdd.chorus.logging.StdOutLogProvider;
 import org.chorusbdd.chorus.websockets.client.WebSocketStepPublisher;
@@ -37,10 +40,15 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -50,7 +58,7 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class TestWebSocketStepPublisher {
 
-
+    private static MockHandler mockHandler = new MockHandler();
     private static WebSocketStepPublisher stepPublisher;
     private static WebSocketMessageProcessor mockProcessor;
     private static final ChorusWebSocketServer chorusWebSocketServer = new ChorusWebSocketServer(9080);
@@ -69,6 +77,10 @@ public class TestWebSocketStepPublisher {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        URI uri = URI.create("ws://localhost:9080");
+        stepPublisher = new WebSocketStepPublisher("testPublisher", uri, mockHandler);
+        stepPublisher.publish();
     }
 
     @AfterClass
@@ -80,11 +92,6 @@ public class TestWebSocketStepPublisher {
 
     @Test
     public void aClientCanPublishAStepAndAServerCanExecuteIt() {
-
-        URI uri = URI.create("ws://localhost:9080");
-        MockHandler mockHandler = new MockHandler();
-        stepPublisher = new WebSocketStepPublisher("testPublisher", uri, mockHandler);
-        stepPublisher.publish();
 
         PublishStepMessage publishStepMessage = new PublishStepMessage(
             "step1",
@@ -117,8 +124,93 @@ public class TestWebSocketStepPublisher {
                 assertTrue(mockHandler.wasStepCalled());
             }
         }.await(TimeUnit.SECONDS, 2);
-
     }
 
+    @Test
+    public void aClientCanPublishAndExecuteAStepRequiringADocString() {
 
+        PublishStepMessage expectedPublish = new PublishStepMessage(
+            "docStringStep",
+            "testPublisher",
+            "call a doc string step",
+            false,
+            Step.NO_PENDING_MESSAGE,
+            "MockHandler:callADocStringStep",
+            0,
+            0,
+            true,
+            false
+        );
+        verify(mockProcessor, timeout(2000)).receivePublishStep(expectedPublish);
+
+        String docStringContent = "hello\nworld";
+        chorusWebSocketServer.sendMessage("testPublisher", new ExecuteStepMessage(
+            "testPublisher",
+            "docStringStep",
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString(),
+            "call a doc string step",
+            30,
+            Collections.singletonList(docStringContent),
+            Collections.emptyMap()
+        ));
+
+        new PolledAssertion() {
+            @Override
+            protected void validate() throws Exception {
+                DocString received = mockHandler.getReceivedDocString();
+                assertNotNull("Step should have received a DocString", received);
+                assertEquals(docStringContent, received.getContent());
+            }
+        }.await(TimeUnit.SECONDS, 2);
+    }
+
+    @Test
+    public void aClientCanPublishAndExecuteAStepRequiringADataTable() {
+
+        PublishStepMessage expectedPublish = new PublishStepMessage(
+            "dataTableStep",
+            "testPublisher",
+            "call a data table step",
+            false,
+            Step.NO_PENDING_MESSAGE,
+            "MockHandler:callADataTableStep",
+            0,
+            0,
+            false,
+            true
+        );
+        verify(mockProcessor, timeout(2000)).receivePublishStep(expectedPublish);
+
+        Map<String, String> row1 = new LinkedHashMap<>();
+        row1.put("name", "Alice");
+        row1.put("email", "alice@example.com");
+        Map<String, String> row2 = new LinkedHashMap<>();
+        row2.put("name", "Bob");
+        row2.put("email", "bob@example.com");
+
+        chorusWebSocketServer.sendMessage("testPublisher", new ExecuteStepMessage(
+            "testPublisher",
+            "dataTableStep",
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString(),
+            "call a data table step",
+            30,
+            Collections.singletonList(Arrays.asList(row1, row2)),
+            Collections.emptyMap()
+        ));
+
+        new PolledAssertion() {
+            @Override
+            protected void validate() throws Exception {
+                DataTable received = mockHandler.getReceivedDataTable();
+                assertNotNull("Step should have received a DataTable", received);
+                assertEquals(2, received.getRows().size());
+                assertEquals("Alice", received.getRows().get(0).get("name"));
+                assertEquals("alice@example.com", received.getRows().get(0).get("email"));
+                assertEquals("Bob", received.getRows().get(1).get("name"));
+                assertEquals("bob@example.com", received.getRows().get(1).get("email"));
+            }
+        }.await(TimeUnit.SECONDS, 2);
+    }
 }

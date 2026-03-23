@@ -23,15 +23,20 @@
  */
 package org.chorusbdd.chorus.websockets;
 
+import org.chorusbdd.chorus.annotations.DataTable;
+import org.chorusbdd.chorus.annotations.DocString;
 import org.chorusbdd.chorus.annotations.Handler;
 import org.chorusbdd.chorus.annotations.Step;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Handler("Test Step Publisher Handler")
 public class MockHandler {
 
     private static final AtomicBoolean stepCalled = new AtomicBoolean();
+    private final AtomicReference<DocString> receivedDocString = new AtomicReference<>();
+    private final AtomicReference<DataTable> receivedDataTable = new AtomicReference<>();
 
     @Step(value = "call a test step", id = "step1")
     public void callATestStep() {
@@ -39,7 +44,25 @@ public class MockHandler {
         stepCalled.set(true);
     }
 
+    @Step(value = "call a doc string step", id = "docStringStep")
+    public void callADocStringStep(DocString docString) {
+        receivedDocString.set(docString);
+    }
+
+    @Step(value = "call a data table step", id = "dataTableStep")
+    public void callADataTableStep(DataTable dataTable) {
+        receivedDataTable.set(dataTable);
+    }
+
     public boolean wasStepCalled() {
         return stepCalled.get();
+    }
+
+    public DocString getReceivedDocString() {
+        return receivedDocString.get();
+    }
+
+    public DataTable getReceivedDataTable() {
+        return receivedDataTable.get();
     }
 }
