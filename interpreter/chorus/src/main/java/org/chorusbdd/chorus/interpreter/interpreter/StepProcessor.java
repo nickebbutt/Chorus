@@ -32,6 +32,7 @@ import org.chorusbdd.chorus.results.ExecutionToken;
 import org.chorusbdd.chorus.results.StepEndState;
 import org.chorusbdd.chorus.results.StepToken;
 import org.chorusbdd.chorus.stepinvoker.*;
+import org.chorusbdd.chorus.stepinvoker.TypeCoercion;
 import org.chorusbdd.chorus.stepinvoker.catalogue.StepCatalogue;
 import org.chorusbdd.chorus.util.ChorusException;
 import org.chorusbdd.chorus.util.ExceptionHandling;
@@ -277,6 +278,20 @@ public class StepProcessor {
             }
             args = new ArrayList<>(args);
             args.add(docString);
+        }
+
+        // If the matched step method expects a DataTable as its final parameter, set the table
+        // into the TypeCoercion ThreadLocal and append the sentinel placeholder to the args list.
+        if (foundStepInvoker.requiresDataTable()) {
+            java.util.List<java.util.Map<String, String>> dataTable = step.getDataTable();
+            if (dataTable.isEmpty()) {
+                throw new ChorusAssertionError(
+                    "Step method expects a DataTable argument but no data table was " +
+                    "found in the feature file for step: " + step.getAction());
+            }
+            TypeCoercion.PENDING_DATA_TABLE.set(dataTable);
+            args = new ArrayList<>(args);
+            args.add(TypeCoercion.DATA_TABLE_SENTINEL);
         }
 
         StepRetryDecorator retryInvoker = new StepRetryDecorator(foundStepInvoker);

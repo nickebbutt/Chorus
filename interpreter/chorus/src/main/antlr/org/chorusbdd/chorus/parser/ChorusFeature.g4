@@ -133,10 +133,10 @@ directiveText
     ;
 
 // A step line: keyword + action text + optional inline directives, followed by an
-// optional DocString block (""" ... """) whose content is appended to the step action.
+// optional DocString block (""" ... """) or data table whose content is attached to the step.
 step
     : stepKeyword stepText stepDirectives? NEWLINE
-      docString?
+      (docString | dataTable)?
     ;
 
 // A DocString block: opening """ line, zero or more content lines, closing """ line.
@@ -144,6 +144,11 @@ docString
     : DOCSTRING_DELIMITER
       DOCSTRING_LINE*
       DOCSTRING_CLOSE
+    ;
+
+// A data table: one or more pipe-delimited table rows immediately after a step line.
+dataTable
+    : tableRow+
     ;
 
 stepKeyword

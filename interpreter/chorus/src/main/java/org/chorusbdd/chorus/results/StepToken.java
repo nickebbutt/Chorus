@@ -63,6 +63,13 @@ public class StepToken extends AbstractToken {
     private String docString;
 
     /**
+     * The rows of a Gherkin data table attached to this step.  Each entry in the list is one
+     * data row represented as a Map keyed by the column headers (first table row).
+     * Empty list when no data table is present.
+     */
+    private List<Map<String, String>> dataTable = new ArrayList<>();
+
+    /**
      * Use the static factory methods to create an instance of a StepToken
      */
     private StepToken(String type, String action) {
@@ -101,6 +108,25 @@ public class StepToken extends AbstractToken {
      */
     public void setDocString(String docString) {
         this.docString = docString;
+    }
+
+    /**
+     * @return the data table rows attached to this step, or an empty list if none.
+     *         Each entry is a row represented as a Map keyed by the column headers.
+     */
+    public List<Map<String, String>> getDataTable() {
+        return dataTable;
+    }
+
+    /**
+     * Set the data table rows for this step.  Called by the parser when a pipe-delimited
+     * table is found immediately after the step line.
+     *
+     * @param dataTable list of row maps (must not be null)
+     */
+    public void setDataTable(List<Map<String, String>> dataTable) {
+        Objects.requireNonNull(dataTable, "dataTable cannot be null");
+        this.dataTable = dataTable;
     }
 
     public StepEndState getEndState() {
@@ -239,6 +265,7 @@ public class StepToken extends AbstractToken {
         copy.timeTaken = this.timeTaken;
         copy.childSteps = recursiveCopy(childSteps);
         copy.docString = this.docString;
+        copy.dataTable = new ArrayList<>(this.dataTable);
         return copy;
     }
 

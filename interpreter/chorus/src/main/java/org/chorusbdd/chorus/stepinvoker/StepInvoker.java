@@ -115,4 +115,14 @@ public interface StepInvoker {
         return false;
     }
 
+    /**
+     * @return true if this invoker expects a
+     *         {@link org.chorusbdd.chorus.annotations.DataTable} as its final parameter,
+     *         meaning a data table must be present on the StepToken at invocation time.
+     *         Returns false by default (remote and other non-method invokers do not support DataTable).
+     */
+    default boolean requiresDataTable() {
+        return false;
+    }
+
 }

@@ -35,7 +35,9 @@ import org.chorusbdd.chorus.util.RegexpUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Pass 2 visitor: walks the ANTLR parse tree to build the FeatureToken model.
@@ -493,6 +495,25 @@ class FeatureFileVisitor extends ChorusFeatureBaseVisitor<Void> {
                 docContent.append(lineText);
             }
             stepToken.setDocString(docContent.toString());
+        }
+
+        // Set DataTable rows on the token when present.
+        // First row = headers; subsequent rows = data rows keyed by headers.
+        if (ctx.dataTable() != null) {
+            List<ChorusFeature.TableRowContext> tableRows = ctx.dataTable().tableRow();
+            if (!tableRows.isEmpty()) {
+                List<String> headers = readTableRow(tableRows.get(0));
+                List<Map<String, String>> dataRows = new ArrayList<>();
+                for (int i = 1; i < tableRows.size(); i++) {
+                    List<String> values = readTableRow(tableRows.get(i));
+                    Map<String, String> rowMap = new LinkedHashMap<>();
+                    for (int j = 0; j < headers.size(); j++) {
+                        rowMap.put(headers.get(j), j < values.size() ? values.get(j) : "");
+                    }
+                    dataRows.add(rowMap);
+                }
+                stepToken.setDataTable(dataRows);
+            }
         }
 
         boolean alreadyMatched = false;

@@ -91,7 +91,10 @@
       "Bash(./gradlew --version 2>&1)",
       "Bash(python3:*)",
       "Bash(powershell -Command \":*)",
-      "Bash(grep -r OUTPUT_FORMATTER /c/dev/chorus-nick/interpreter/ --include=*.java -l)"
+      "Bash(grep -r OUTPUT_FORMATTER /c/dev/chorus-nick/interpreter/ --include=*.java -l)",
+      "Bash(./gradlew :integrationtest:compileTestJava)",
+      "Bash(./gradlew :integrationtest:test --tests \"*TestDataTable*\")",
+      "Bash(./gradlew :integrationtest:test --tests \"*TestDataTable*\" -DchorusSelfTestsOverwriteStdOutAndErr=true)"
     ]
   }
 }

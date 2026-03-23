@@ -23,6 +23,7 @@
  */
 package org.chorusbdd.chorus.stepinvoker;
 
+import org.chorusbdd.chorus.annotations.DataTable;
 import org.chorusbdd.chorus.annotations.DocString;
 import org.chorusbdd.chorus.annotations.Step;
 import org.chorusbdd.chorus.logging.ChorusLog;
@@ -80,6 +81,17 @@ public class SimpleMethodInvoker extends SkeletalStepInvoker {
         Class<?>[] parameterTypes = getMethod().getParameterTypes();
         return parameterTypes.length > 0
                 && DocString.class.equals(parameterTypes[parameterTypes.length - 1]);
+    }
+
+    /**
+     * @return true if the last parameter of this method is of type {@link DataTable},
+     *         indicating the step requires a data table to be present in the feature file.
+     */
+    @Override
+    public boolean requiresDataTable() {
+        Class<?>[] parameterTypes = getMethod().getParameterTypes();
+        return parameterTypes.length > 0
+                && DataTable.class.equals(parameterTypes[parameterTypes.length - 1]);
     }
 
     private void checkArgumentCount(List<String> args, Class<?>[] parameterTypes) {
