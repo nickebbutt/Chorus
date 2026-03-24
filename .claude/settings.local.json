@@ -102,7 +102,9 @@
       "Bash(./gradlew :chorus:test :integrationtest:test --tests \"*TestDataTable*\" --tests \"*TestDocString*\")",
       "Bash(./gradlew :chorus:test :integrationtest:test --tests \"*TestDataTable*\" --tests \"*TestDocString*\" --tests \"*TestJmxExecutionListener*\")",
       "Bash(./gradlew :chorus:compileJava :chorus-websockets:compileJava :integrationtest:compileTestJava)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(./gradlew :integrationtest:test --tests \"*TestJmxDocStringDataTable*\")",
+      "Bash(./gradlew :integrationtest:processTestResources)"
     ]
   }
 }
