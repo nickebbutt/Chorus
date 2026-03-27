@@ -11,35 +11,29 @@ description = "chorus"
 // so the tokens file is present before the main generateGrammarSource invocation runs,
 // then using -lib to tell ANTLR where to find it.
 
-// Step 1: Run ANTLR on the lexer grammar only to produce ChorusFeatureLexer.tokens
+// Step 1: Run ANTLR on the lexer grammar only to produce ChorusFeatureLexer.tokens.
+// We use the grammar's own package directory as workingDir so ANTLR writes the tokens
+// file flat into antlr-lib (no subdirectory). ANTLR's -lib flag is a flat lookup, so
+// the tokens file must be directly in the lib dir, not in a package subdirectory.
 task generateLexerTokens(type: JavaExec) {
     description = 'Pre-generates ANTLR lexer tokens file required by the parser grammar'
-    workingDir = file('src/main/antlr')
+    workingDir = file('src/main/antlr/org/chorusbdd/chorus/parser')
     classpath = configurations.antlr
     mainClass = 'org.antlr.v4.Tool'
-    def prereqDir = layout.buildDirectory.dir('antlr-prereqs')
-    args '-o', prereqDir.get().asFile.absolutePath,
+    def libDir = layout.buildDirectory.dir('antlr-lib')
+    args '-o', libDir.get().asFile.absolutePath,
          '-package', 'org.chorusbdd.chorus.parser',
-         'org/chorusbdd/chorus/parser/ChorusFeatureLexer.g4'
-    outputs.dir(prereqDir)
+         'ChorusFeatureLexer.g4'
+    outputs.dir(libDir)
     doFirst {
-        prereqDir.get().asFile.mkdirs()
+        libDir.get().asFile.mkdirs()
     }
 }
 
-// Step 2: Copy the .tokens file into the ANTLR -lib directory
-task copyLexerTokens(type: Copy) {
-    description = 'Copies ANTLR tokens file to the library directory for grammar generation'
-    dependsOn generateLexerTokens
-    from layout.buildDirectory.dir('antlr-prereqs')
-    into layout.buildDirectory.dir('antlr-lib')
-    include '**/*.tokens'
-}
-
-// Step 3: Generate the full grammar (parser + lexer), with the tokens file already present
+// Step 2: Generate the full grammar (parser + lexer), with the tokens file already present
 generateGrammarSource {
     maxHeapSize = "64m"
-    dependsOn copyLexerTokens
+    dependsOn generateLexerTokens
     arguments += ["-visitor", "-no-listener", "-package", "org.chorusbdd.chorus.parser",
                   "-lib", layout.buildDirectory.dir('antlr-lib').get().asFile.absolutePath]
 }
