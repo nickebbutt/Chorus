@@ -104,7 +104,9 @@
       "Bash(./gradlew :chorus:compileJava :chorus-websockets:compileJava :integrationtest:compileTestJava)",
       "Bash(grep -v \"^$\")",
       "Bash(./gradlew :integrationtest:test --tests \"*TestJmxDocStringDataTable*\")",
-      "Bash(./gradlew :integrationtest:processTestResources)"
+      "Bash(./gradlew :integrationtest:processTestResources)",
+      "Bash(find /c/dev/chorus-nick -name saxon*.jar)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }

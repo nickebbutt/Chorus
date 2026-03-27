@@ -19,7 +19,7 @@ allprojects  {
     }
     
     group = "org.chorusbdd"
-    version = '4.0.1'
+    version = '5.0.0-ALPHA'
 
     test {
         doFirst {
