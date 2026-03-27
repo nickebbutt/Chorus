@@ -95,7 +95,9 @@ public class TestJmxSecureConnection extends AbstractInterpreterTest {
     protected void doUpdateTestProperties(DefaultTestProperties sysProps) {
         sysProps.setProperty("javax.net.ssl.keyStore", pathToKeyStoreFile);
         sysProps.setProperty("javax.net.ssl.keyStorePassword", "chorusIsCool");
+        sysProps.setProperty("javax.net.ssl.keyStoreType", "PKCS12");
         sysProps.setProperty("javax.net.ssl.trustStore", pathToTrustStoreFile);
         sysProps.setProperty("javax.net.ssl.trustStorePassword", "chorusIsCool");
+        sysProps.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
     }
 }
